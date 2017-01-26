@@ -5,7 +5,7 @@ use Data::Dumper;
 use FindBin qw($Bin);
 
 
-GetOptions (\%opt,"table:s","ref:s","help");
+GetOptions (\%opt,"table:s","ref:s", "flank:s","help");
 
 
 my $help=<<USAGE;
