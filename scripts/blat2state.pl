@@ -9,7 +9,7 @@ GetOptions (\%opt,"ref:s","qry:s","snp:s","flank:s","blat:s","help");
 
 
 my $help=<<USAGE;
-perl $0 --qry --ref --blat --flank 100
+perl $0 --qry --ref --blat --flank 200
 Blat the flanking sequence of SNPs to ancestor genome. Get ancestor state of the SNPs in ancestor.
 Flanking sequence store 100+1SNP+100=201, or 500+1SNP+500=1001.
 USAGE
@@ -24,12 +24,12 @@ $opt{qry} ||= "../input/HEG4_EG4_A119_A123_NB_SNPs.noRepeats.selectedSNPs.flanki
 $opt{ref} ||= "/rhome/cjinfeng/BigData/00.RD/Transposon_Oryza/OGE_genomes/O.rufipogon/Oryza_rufipogon_W1943_scaffolds_v1.0.fa";
 $opt{snp} ||= "../input/HEG4_EG4_A119_A123_NB_SNPs.noRepeats.selectedSNPs.flanking_200.allele";
 $opt{blat} ||= "../input/HEG4_EG4_A119_A123_NB_SNPs.noRepeats.selectedSNPs.flanking_200.ORU.best.psl";
-$opt{flank} ||= 100; ### flanking length of SNPs
+$opt{flank} ||= 200; ### flanking length of SNPs, should be half length of previous 
 
 my $refseq=getfastaseq($opt{ref});
 my $qryseq=getfastaseq($opt{qry});
 #my $allele=allele($opt{snp});
-blat2state($opt{blat},$refseq,$qryseq,$opt{flank});
+blat2state($opt{blat},$refseq,$qryseq,$opt{flank}/2);
 #blat2vcf($opt{blat},$refseq,$qryseq,$allele);
 
 ############
@@ -155,9 +155,9 @@ sub blat2state
 my ($file,$ref,$qry,$flank)=@_;
 my %hash;
 my $pre= $1 if ($file=~/(.*)\.best.psl$/);
-`cp head.vcf $pre.ancestor.vcf`;
-open OUT, ">temp.state" or die "$!";
-open OUT1, ">>$pre.ancestor.vcf" or die "$!";
+#`cp head.vcf $pre.genotype.vcf`;
+open OUT, ">$pre.temp.state" or die "$!";
+open OUT1, ">>$pre.genotype.vcf" or die "$!";
 open IN, "$file" or die "$!";
 while(<IN>){
     chomp $_;
@@ -168,7 +168,7 @@ while(<IN>){
     if ($unit[0]/$unit[10] > 0.9 and $unit[17] == 1){ ###block size larger than 90% of qry size and single block match
        my ($chr, $position);
        if ($unit[9]=~/S(\d{2})(\d{9})/){
-          $chr = 'Chr'.int($1);
+          $chr = 'scaffold_'.int($1);
           $position = int($2);
        }
        #my $qrymatch1  = $qry->{$unit[9]};
@@ -177,7 +177,8 @@ while(<IN>){
        my $refmatch = substr($ref->{$unit[13]}, $unit[20], $unit[18]);
        my $pos = $flank-$unit[19]; ### SNP position in match fragment
        my $mark= 'X' x $pos; 
-       my ($qryallele, $refallele);
+       my $qryallele = 'N';
+       my $refallele = 'N';
        if ($unit[8] eq "+"){
            $qryallele = substr($qrymatch, $pos, 1);
            $refallele = substr($refmatch, $pos, 1);

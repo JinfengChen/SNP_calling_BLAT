@@ -58,7 +58,7 @@ def main():
     parser.add_argument('--reference', '--ref')
     parser.add_argument('--assembly', '--asm')
     parser.add_argument('--vcf')
-    parser.add_argument('--flank')
+    parser.add_argument('--flank', help='set 200 bp flanking will extract 100 bp from each side')
     parser.add_argument('-o', '--output')
     parser.add_argument('-v', dest='verbose', action='store_true')
     args = parser.parse_args()
@@ -117,7 +117,7 @@ def main():
     step4_shell = '%s.step4.sh' %(args.output) 
     cmd = 'perl %s/blat2state.pl --qry %s.flanking_%s.fasta --ref %s --blat %s.best.psl --flank %s' %(script, args.output, args.flank, args.assembly, args.output, args.flank)
     write_file(cmd, step4_shell)
-    if not os.path.exists('%s.' %(args.output)):
+    if not os.path.exists('%s.genotype.vcf' %(args.output)):
         runjob(step4_shell, 1)
 
 if __name__ == '__main__':
